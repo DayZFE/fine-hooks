@@ -21,15 +21,17 @@ declare function useBindRef<T>(val: T): React.MutableRefObject<T>;
 declare function useCustomMemo<D extends DepObj>(depObj: D): D;
 declare function useCustomMemo<D extends DepObj, R>(depObj: D, memoFunc: (val: D) => R): R;
 /**
- * useCallback using object dependencies and error handler
+ *  useCallback using object dependencies and error handler
  *
  * @template D
+ * @template P
+ * @template R
  * @param {D} depObj
- * @param {(val: D, ...args: any[]) => any} memoFunc
+ * @param {(val: D, ...args: P) => R} memoFunc
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  * @return {*}
  */
-declare function useCustomCallback<D extends DepObj>(depObj: D, memoFunc: (val: D, ...args: any[]) => any, errorCb?: (err: Error) => ReturnType<EffectCallback>): (...props: Omit<Parameters<typeof memoFunc>, 0>) => any;
+declare function useCustomCallback<D extends DepObj, P extends any[], R>(depObj: D, memoFunc: (val: D, ...args: P) => R, errorCb?: (err: Error) => ReturnType<EffectCallback>): (...props: P) => R;
 /**
  *
  * useEffect using object dependencies
