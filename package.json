@@ -13,6 +13,10 @@
     "simple",
     "fine"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DayZFE/fine-hooks"
+  },
   "private": false,
   "author": "plightfield",
   "scripts": {
