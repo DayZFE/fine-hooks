@@ -14,7 +14,7 @@ our target is to ——
 
 4. SOA to be simple
 
-here is an example:
+here is an [example](https://codesandbox.io/s/fine-hooks-jydmd?file=/src/App.tsx):
 
 ```typescript
 import $ from "fine-hooks";
