@@ -14,7 +14,7 @@ import React, {
   PropsWithChildren,
 } from "react";
 
-type DepObj = { [key: string]: any; [key: number]: any };
+export type DepObj = { [key: string]: any; [key: number]: any };
 
 /**
  * generate dependency list from object
@@ -23,7 +23,7 @@ type DepObj = { [key: string]: any; [key: number]: any };
  * @param {D} depObj
  * @return {*}
  */
-function getDepKeys<D extends DepObj>(depObj: D) {
+export function getDepKeys<D extends DepObj>(depObj: D) {
   return Object.keys(depObj).map((key) => depObj[key]);
 }
 
@@ -34,7 +34,7 @@ function getDepKeys<D extends DepObj>(depObj: D) {
  * @param {T} val
  * @return {*}
  */
-function useBindRef<T>(val: T) {
+export function useBindRef<T>(val: T) {
   const result = useRef(val);
   result.current = val;
   return result;
@@ -47,12 +47,12 @@ function useBindRef<T>(val: T) {
  * @param {D} depObj
  * @return {*}  {D}
  */
-function useCustomMemo<D extends DepObj>(depObj: D): D;
-function useCustomMemo<D extends DepObj, R>(
+export function useCustomMemo<D extends DepObj>(depObj: D): D;
+export function useCustomMemo<D extends DepObj, R>(
   depObj: D,
   memoFunc: (val: D) => R
 ): R;
-function useCustomMemo<D extends DepObj, R>(
+export function useCustomMemo<D extends DepObj, R>(
   depObj: D,
   memoFunc?: (val: D) => R,
   errorCb?: (err: Error) => ReturnType<EffectCallback>
@@ -80,7 +80,7 @@ function useCustomMemo<D extends DepObj, R>(
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  * @return {*}
  */
-function useCustomCallback<D extends DepObj, P extends any[], R>(
+export function useCustomCallback<D extends DepObj, P extends any[], R>(
   depObj: D,
   memoFunc: (val: D, ...args: P) => R,
   errorCb?: (err: Error) => ReturnType<EffectCallback>
@@ -111,7 +111,7 @@ function useCustomCallback<D extends DepObj, P extends any[], R>(
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-function useCustomEffect<D extends DepObj>(
+export function useCustomEffect<D extends DepObj>(
   depObj: D,
   cb: (val: D) => ReturnType<EffectCallback>,
   ignoreFirst: boolean = false,
@@ -152,7 +152,7 @@ function useCustomEffect<D extends DepObj>(
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-function useCustomLayoutEffect<D extends DepObj>(
+export function useCustomLayoutEffect<D extends DepObj>(
   depObj: D,
   cb: (val: D) => ReturnType<EffectCallback>,
   ignoreFirst: boolean = false,
@@ -195,7 +195,7 @@ function useCustomLayoutEffect<D extends DepObj>(
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-function usePartialEffect<D extends DepObj, ND extends DepObj>(
+export function usePartialEffect<D extends DepObj, ND extends DepObj>(
   depObj: D,
   relObj: ND,
   cb: (val: D, noDepVal: ND) => ReturnType<EffectCallback>,
@@ -239,7 +239,7 @@ function usePartialEffect<D extends DepObj, ND extends DepObj>(
  * @param {(...args: P) => R} func
  * @return {*}
  */
-function createService<P extends any[], R>(func: (...args: P) => R) {
+export function createService<P extends any[], R>(func: (...args: P) => R) {
   const ServiceContext = createContext<R | null>(null);
   ServiceContext.displayName = func.name || "unkonwn_service";
   function ServiceProvider(
@@ -272,25 +272,22 @@ function createService<P extends any[], R>(func: (...args: P) => R) {
   };
 }
 
-/**
- * fine Hooks accessor
- *
- * @class FineHooks
- */
-class FineHooks {
-  S = useState;
-  M = useCustomMemo;
-  R = useRef;
-  BR = useBindRef;
-  C = useCustomCallback;
-  E = useCustomEffect;
-  LE = useCustomLayoutEffect;
-  PE = usePartialEffect;
-  D = useDebugValue;
-  X = useReducer;
-  IM = useImperativeHandle;
-  CTX = useContext;
-  CCTX = createContext;
-  CS = createService;
-}
-export default new FineHooks();
+const fineHook = {
+  S: useState,
+  M: useCustomMemo,
+  R: useRef,
+  BR: useBindRef,
+  C: useCustomCallback,
+  E: useCustomEffect,
+  LE: useCustomLayoutEffect,
+  PE: usePartialEffect,
+  D: useDebugValue,
+  X: useReducer,
+  IM: useImperativeHandle,
+  CTX: useContext,
+  CCTX: createContext,
+  CS: createService,
+};
+export type FineHook = typeof fineHook;
+
+export default fineHook;

@@ -1,8 +1,16 @@
 import React, { EffectCallback, PropsWithChildren } from "react";
-declare type DepObj = {
-    [key: string]: any;
-    [key: number]: any;
+export declare type DepObj = {
+  [key: string]: any;
+  [key: number]: any;
 };
+/**
+ * generate dependency list from object
+ *
+ * @template D
+ * @param {D} depObj
+ * @return {*}
+ */
+export declare function getDepKeys<D extends DepObj>(depObj: D): any[];
 /**
  * generate ref value change with state
  *
@@ -10,7 +18,7 @@ declare type DepObj = {
  * @param {T} val
  * @return {*}
  */
-declare function useBindRef<T>(val: T): React.MutableRefObject<T>;
+export declare function useBindRef<T>(val: T): React.MutableRefObject<T>;
 /**
  *  useMemo using object dependencies and error handler
  *
@@ -18,8 +26,11 @@ declare function useBindRef<T>(val: T): React.MutableRefObject<T>;
  * @param {D} depObj
  * @return {*}  {D}
  */
-declare function useCustomMemo<D extends DepObj>(depObj: D): D;
-declare function useCustomMemo<D extends DepObj, R>(depObj: D, memoFunc: (val: D) => R): R;
+export declare function useCustomMemo<D extends DepObj>(depObj: D): D;
+export declare function useCustomMemo<D extends DepObj, R>(
+  depObj: D,
+  memoFunc: (val: D) => R
+): R;
 /**
  *  useCallback using object dependencies and error handler
  *
@@ -31,7 +42,11 @@ declare function useCustomMemo<D extends DepObj, R>(depObj: D, memoFunc: (val: D
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  * @return {*}
  */
-declare function useCustomCallback<D extends DepObj, P extends any[], R>(depObj: D, memoFunc: (val: D, ...args: P) => R, errorCb?: (err: Error) => ReturnType<EffectCallback>): (...props: P) => R;
+export declare function useCustomCallback<D extends DepObj, P extends any[], R>(
+  depObj: D,
+  memoFunc: (val: D, ...args: P) => R,
+  errorCb?: (err: Error) => ReturnType<EffectCallback>
+): (...props: P) => R;
 /**
  *
  * useEffect using object dependencies
@@ -46,7 +61,12 @@ declare function useCustomCallback<D extends DepObj, P extends any[], R>(depObj:
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-declare function useCustomEffect<D extends DepObj>(depObj: D, cb: (val: D) => ReturnType<EffectCallback>, ignoreFirst?: boolean, errorCb?: (err: Error) => ReturnType<EffectCallback>): void;
+export declare function useCustomEffect<D extends DepObj>(
+  depObj: D,
+  cb: (val: D) => ReturnType<EffectCallback>,
+  ignoreFirst?: boolean,
+  errorCb?: (err: Error) => ReturnType<EffectCallback>
+): void;
 /**
  * useLayoutEffect using object dependencies
  *
@@ -60,7 +80,12 @@ declare function useCustomEffect<D extends DepObj>(depObj: D, cb: (val: D) => Re
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-declare function useCustomLayoutEffect<D extends DepObj>(depObj: D, cb: (val: D) => ReturnType<EffectCallback>, ignoreFirst?: boolean, errorCb?: (err: Error) => ReturnType<EffectCallback>): void;
+export declare function useCustomLayoutEffect<D extends DepObj>(
+  depObj: D,
+  cb: (val: D) => ReturnType<EffectCallback>,
+  ignoreFirst?: boolean,
+  errorCb?: (err: Error) => ReturnType<EffectCallback>
+): void;
 /**
  * useEffect that only depends part of deps
  *
@@ -76,7 +101,13 @@ declare function useCustomLayoutEffect<D extends DepObj>(depObj: D, cb: (val: D)
  * @param {boolean} [ignoreFirst=false]
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  */
-declare function usePartialEffect<D extends DepObj, ND extends DepObj>(depObj: D, relObj: ND, cb: (val: D, noDepVal: ND) => ReturnType<EffectCallback>, ignoreFirst?: boolean, errorCb?: (err: Error) => ReturnType<EffectCallback>): void;
+export declare function usePartialEffect<D extends DepObj, ND extends DepObj>(
+  depObj: D,
+  relObj: ND,
+  cb: (val: D, noDepVal: ND) => ReturnType<EffectCallback>,
+  ignoreFirst?: boolean,
+  errorCb?: (err: Error) => ReturnType<EffectCallback>
+): void;
 /**
  * create a service
  *
@@ -91,34 +122,37 @@ declare function usePartialEffect<D extends DepObj, ND extends DepObj>(depObj: D
  * @param {(...args: P) => R} func
  * @return {*}
  */
-declare function createService<P extends any[], R>(func: (...args: P) => R): {
-    P: (props: PropsWithChildren<P extends [] ? {
-        params?: P;
-    } : {
-        params: P;
-    }>) => JSX.Element;
-    IN: () => R;
+export declare function createService<P extends any[], R>(
+  func: (...args: P) => R
+): {
+  P: (
+    props: PropsWithChildren<
+      P extends []
+        ? {
+            params?: P;
+          }
+        : {
+            params: P;
+          }
+    >
+  ) => JSX.Element;
+  IN: () => R;
 };
-/**
- * fine Hooks accessor
- *
- * @class FineHooks
- */
-declare class FineHooks {
-    S: typeof React.useState;
-    M: typeof useCustomMemo;
-    R: typeof React.useRef;
-    BR: typeof useBindRef;
-    C: typeof useCustomCallback;
-    E: typeof useCustomEffect;
-    LE: typeof useCustomLayoutEffect;
-    PE: typeof usePartialEffect;
-    D: typeof React.useDebugValue;
-    X: typeof React.useReducer;
-    IM: typeof React.useImperativeHandle;
-    CTX: typeof React.useContext;
-    CCTX: typeof React.createContext;
-    CS: typeof createService;
-}
-declare const _default: FineHooks;
-export default _default;
+declare const fineHook: {
+  S: typeof React.useState;
+  M: typeof useCustomMemo;
+  R: typeof React.useRef;
+  BR: typeof useBindRef;
+  C: typeof useCustomCallback;
+  E: typeof useCustomEffect;
+  LE: typeof useCustomLayoutEffect;
+  PE: typeof usePartialEffect;
+  D: typeof React.useDebugValue;
+  X: typeof React.useReducer;
+  IM: typeof React.useImperativeHandle;
+  CTX: typeof React.useContext;
+  CCTX: typeof React.createContext;
+  CS: typeof createService;
+};
+export declare type FineHook = typeof fineHook;
+export default fineHook;
