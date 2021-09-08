@@ -3,6 +3,7 @@
         "outDir": "./lib",
         "lib": [
             "es2015",
+            "DOM"
         ],
         "target": "ES6",
         "jsx": "react",
