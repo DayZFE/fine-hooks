@@ -73,22 +73,20 @@ function useCustomMemo<D extends DepObj, R>(
  * useCallback using object dependencies and error handler
  *
  * @template D
- * @template P
- * @template R
  * @param {D} depObj
- * @param {(val: D, ...args: P) => R} memoFunc
+ * @param {(val: D, ...args: any[]) => any} memoFunc
  * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
  * @return {*}
  */
-function useCustomCallback<D extends DepObj, P extends any[], R>(
+function useCustomCallback<D extends DepObj>(
   depObj: D,
-  memoFunc: (val: D, ...args: P) => R,
+  memoFunc: (val: D, ...args: any[]) => any,
   errorCb?: (err: Error) => ReturnType<EffectCallback>
 ) {
   const deps = getDepKeys(depObj);
   const errorCbR = useBindRef(errorCb);
   // eslint-disable-next-line
-  return useCallback((...props: P) => {
+  return useCallback((...props: Omit<Parameters<typeof memoFunc>, 0>) => {
     try {
       return memoFunc(depObj, ...props);
     } catch (err) {
