@@ -10,7 +10,7 @@
         "esModuleInterop": true,
         "declaration": true,
         "module": "esnext",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
     },
     "include": [
         "src/**/*"

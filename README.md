@@ -1,85 +1,80 @@
 # fine-hooks
 
-> a simple tool give you unified React hooks accessor
+> a simple tool to help handle callback and effect
 
-### no need to use eslint-plugin-react-hooks any more!!!
+### more efficient to schedule
 
-our target is to ——
-
-1. use object as dependencies instead of array or set
-
-2. some useful functionality such as usePartialEffect and useBindRef
-
-3. unified hooks accessor
-
-4. SOA to be simple
-
-here is an [example](https://codesandbox.io/s/fine-hooks-jydmd?file=/src/App.tsx):
+## by just only four apis
 
 ```typescript
-import $ from "fine-hooks";
+import {
+  createService,
+  useBindRef,
+  useSafeCallback,
+  usePartialEffect,
+} from "fine-hooks";
 
 // declare a service
-const SomeService = $.CS(function SomeService() {
-  const [name, setName] = $.S("test");
+const SomeService = createService(function SomeService() {
+  const [name, setName] = useState("test");
   return {
     name,
     setName,
   };
 });
 
-// SomeService.IN instead of useContext
+// SomeService.useInject instead of useContext
 // it throw error when dependency not provided
 function Test() {
-  const data = SomeService.IN();
+  const data = SomeService.useInject();
   return <div>{data.name}</div>;
 }
 
-// useEveryThing by $
 export default function App() {
-  const [a, setA] = $.S("");
-  const [b, setB] = $.S("");
-  // object instead of array
-  const text = $.M({ a, b }, (res) => res.a + res.b);
-  const ab = $.M({ a, b });
-  // ref bind with a state
-  // otherwise use $.R
-  const aP = $.BR(a);
-  // useCallback, same as Memo
-  // cb's type is (name:string)=>void
-  const cb = $.C({ a, b }, (res, name: string) => {
-    console.log(name, res.a, res.b);
-  });
-  // useEffect
-  // third prop means ignore the first effect process
-  $.E(
-    { cb },
-    (res) => {
-      res.cb("changed");
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  // ref bind with a
+  const aR = useBindRef(a);
+
+  // useSafeCallback
+  // ! useSafeCallback only dispatch props, never receive result !
+  const cb = useSafeCallback(
+    () => {
+      console.log(a);
+      throw new Error("some error");
     },
-    true
+    [a],
+    // delay/debounce time
+    1000,
+    // if debounce, otherwise delay when falsy
+    true,
+    (err) => {
+      // some error
+      console.log(err.message);
+    }
   );
 
-  // useLayoutEffect
-  $.LE({ a }, (res) => {
-    console.log(res.a);
-  });
-  $.E({ ab }, (res) => {
-    console.log(res.ab, aP.current);
-  });
   // usePartialEffect
-  // take effect only when first prop change
-  $.PE({ a }, { b }, (res, rel) => {
-    console.log("partial", res, rel);
-  });
+  usePartialEffect(
+    ([bVal], [preBVal]) => {
+      console.log(a, bVal, preBVal);
+      throw new Error("some error");
+    },
+    [a],
+    [b] as const,
+    true,
+    (err) => {
+      // some error
+      console.log(err.message);
+    }
+  );
   return (
     <div className='App'>
       <input value={a} onChange={(e) => setA(e.target.value)} />
       <input value={b} onChange={(e) => setB(e.target.value)} />
-      {text}
-      <SomeService.P>
+      <SomeService.Provider>
         <Test />
-      </SomeService.P>
+      </SomeService.Provider>
     </div>
   );
 }

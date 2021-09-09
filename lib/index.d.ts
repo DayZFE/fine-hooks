@@ -1,18 +1,6 @@
-import React, { EffectCallback, PropsWithChildren } from "react";
-export declare type DepObj = {
-  [key: string]: any;
-  [key: number]: any;
-};
+import React, { EffectCallback, PropsWithChildren, DependencyList } from "react";
 /**
- * generate dependency list from object
- *
- * @template D
- * @param {D} depObj
- * @return {*}
- */
-export declare function getDepKeys<D extends DepObj>(depObj: D): any[];
-/**
- * generate ref value change with state
+ * declare and bind ref to a value
  *
  * @template T
  * @param {T} val
@@ -20,94 +8,28 @@ export declare function getDepKeys<D extends DepObj>(depObj: D): any[];
  */
 export declare function useBindRef<T>(val: T): React.MutableRefObject<T>;
 /**
- *  useMemo using object dependencies and error handler
+ * safe callback with delay and debounce
  *
- * @template D
- * @param {D} depObj
- * @return {*}  {D}
- */
-export declare function useCustomMemo<D extends DepObj>(depObj: D): D;
-export declare function useCustomMemo<D extends DepObj, R>(
-  depObj: D,
-  memoFunc: (val: D) => R
-): R;
-/**
- *  useCallback using object dependencies and error handler
+ * error handler within
  *
- * @template D
- * @template P
- * @template R
- * @param {D} depObj
- * @param {(val: D, ...args: P) => R} memoFunc
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
+ * @template F
+ * @param {F} cb
+ * @param {DependencyList} deps
+ * @param {*} [delay=-1]
+ * @param {boolean} [debounce=false]
+ * @param {(err: Error) => void} [onError=() => {}]
  * @return {*}
  */
-export declare function useCustomCallback<D extends DepObj, P extends any[], R>(
-  depObj: D,
-  memoFunc: (val: D, ...args: P) => R,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-): (...props: P) => R;
+export declare function useSafeCallback<F extends (...args: any[]) => any>(cb: F, deps: DependencyList, delay?: number, debounce?: boolean, onError?: (err: Error) => void): (...args: Parameters<F>) => void;
 /**
+ * partial dependencies effect with ignoreFirst and previous value compare
  *
- * useEffect using object dependencies
+ * also have error handler
  *
- * can set if ignore first effect
- *
- * with error handler
- *
- * @template D
- * @param {D} depObj
- * @param {(val: D) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
+ * @template P
+ * @template any
  */
-export declare function useCustomEffect<D extends DepObj>(
-  depObj: D,
-  cb: (val: D) => ReturnType<EffectCallback>,
-  ignoreFirst?: boolean,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-): void;
-/**
- * useLayoutEffect using object dependencies
- *
- * can set if ignore first effect
- *
- * with error handler
- *
- * @template D
- * @param {D} depObj
- * @param {(val: D) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
- */
-export declare function useCustomLayoutEffect<D extends DepObj>(
-  depObj: D,
-  cb: (val: D) => ReturnType<EffectCallback>,
-  ignoreFirst?: boolean,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-): void;
-/**
- * useEffect that only depends part of deps
- *
- * using object dependencies
- *
- * can set if ignore first effect
- *
- * @template D
- * @template ND
- * @param {D} depObj
- * @param {ND} relObj
- * @param {(val: D, noDepVal: ND) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
- */
-export declare function usePartialEffect<D extends DepObj, ND extends DepObj>(
-  depObj: D,
-  relObj: ND,
-  cb: (val: D, noDepVal: ND) => ReturnType<EffectCallback>,
-  ignoreFirst?: boolean,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-): void;
+export declare function usePartialEffect<P extends readonly any[]>(cb: (props: P, preProps: P | []) => ReturnType<EffectCallback>, deps: DependencyList, props: P, ignoreFirst?: boolean, onError?: (err: Error) => void): void;
 /**
  * create a service
  *
@@ -122,37 +44,11 @@ export declare function usePartialEffect<D extends DepObj, ND extends DepObj>(
  * @param {(...args: P) => R} func
  * @return {*}
  */
-export declare function createService<P extends any[], R>(
-  func: (...args: P) => R
-): {
-  P: (
-    props: PropsWithChildren<
-      P extends []
-        ? {
-            params?: P;
-          }
-        : {
-            params: P;
-          }
-    >
-  ) => JSX.Element;
-  IN: () => R;
+export declare function createService<P extends any[], R>(func: (...args: P) => R): {
+    Provider: (props: PropsWithChildren<P extends [] ? {
+        params?: P;
+    } : {
+        params: P;
+    }>) => JSX.Element;
+    useInject: () => R;
 };
-declare const fineHook: {
-  S: typeof React.useState;
-  M: typeof useCustomMemo;
-  R: typeof React.useRef;
-  BR: typeof useBindRef;
-  C: typeof useCustomCallback;
-  E: typeof useCustomEffect;
-  LE: typeof useCustomLayoutEffect;
-  PE: typeof usePartialEffect;
-  D: typeof React.useDebugValue;
-  X: typeof React.useReducer;
-  IM: typeof React.useImperativeHandle;
-  CTX: typeof React.useContext;
-  CCTX: typeof React.createContext;
-  CS: typeof createService;
-};
-export declare type FineHook = typeof fineHook;
-export default fineHook;

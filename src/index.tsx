@@ -1,34 +1,17 @@
 import React, {
-  useState,
   useMemo,
   EffectCallback,
   useEffect,
   useRef,
-  useLayoutEffect,
   useCallback,
-  useDebugValue,
-  useReducer,
-  useImperativeHandle,
   useContext,
   createContext,
   PropsWithChildren,
+  DependencyList,
 } from "react";
 
-export type DepObj = { [key: string]: any; [key: number]: any };
-
 /**
- * generate dependency list from object
- *
- * @template D
- * @param {D} depObj
- * @return {*}
- */
-export function getDepKeys<D extends DepObj>(depObj: D) {
-  return Object.keys(depObj).map((key) => depObj[key]);
-}
-
-/**
- * generate ref value change with state
+ * declare and bind ref to a value
  *
  * @template T
  * @param {T} val
@@ -41,185 +24,95 @@ export function useBindRef<T>(val: T) {
 }
 
 /**
- *  useMemo using object dependencies and error handler
+ * safe callback with delay and debounce
  *
- * @template D
- * @param {D} depObj
- * @return {*}  {D}
- */
-export function useCustomMemo<D extends DepObj>(depObj: D): D;
-export function useCustomMemo<D extends DepObj, R>(
-  depObj: D,
-  memoFunc: (val: D) => R
-): R;
-export function useCustomMemo<D extends DepObj, R>(
-  depObj: D,
-  memoFunc?: (val: D) => R,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-) {
-  const deps = getDepKeys(depObj);
-  const errorCbR = useBindRef(errorCb);
-  // eslint-disable-next-line
-  return useMemo(() => {
-    try {
-      return memoFunc ? memoFunc(depObj) : depObj;
-    } catch (err) {
-      errorCbR.current?.(err);
-    }
-  }, deps);
-}
-
-/**
- *  useCallback using object dependencies and error handler
+ * error handler within
  *
- * @template D
- * @template P
- * @template R
- * @param {D} depObj
- * @param {(val: D, ...args: P) => R} memoFunc
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
+ * @template F
+ * @param {F} cb
+ * @param {DependencyList} deps
+ * @param {*} [delay=-1]
+ * @param {boolean} [debounce=false]
+ * @param {(err: Error) => void} [onError=() => {}]
  * @return {*}
  */
-export function useCustomCallback<D extends DepObj, P extends any[], R>(
-  depObj: D,
-  memoFunc: (val: D, ...args: P) => R,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
+export function useSafeCallback<F extends (...args: any[]) => any>(
+  cb: F,
+  deps: DependencyList,
+  delay = -1,
+  debounce: boolean = false,
+  onError: (err: Error) => void = () => {}
 ) {
-  const deps = getDepKeys(depObj);
-  const errorCbR = useBindRef(errorCb);
-  // eslint-disable-next-line
-  return useCallback((...props: P) => {
-    try {
-      return memoFunc(depObj, ...props);
-    } catch (err) {
-      errorCbR.current?.(err);
-    }
-  }, deps);
-}
-
-/**
- *
- * useEffect using object dependencies
- *
- * can set if ignore first effect
- *
- * with error handler
- *
- * @template D
- * @param {D} depObj
- * @param {(val: D) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
- */
-export function useCustomEffect<D extends DepObj>(
-  depObj: D,
-  cb: (val: D) => ReturnType<EffectCallback>,
-  ignoreFirst: boolean = false,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-) {
-  const deps = getDepKeys(depObj);
   const cbR = useBindRef(cb);
-  const errorCbR = useBindRef(errorCb);
-  const changedR = useRef(!ignoreFirst);
-  useEffect(() => {
-    if (!changedR.current) {
-      Promise.resolve().then(() => {
-        changedR.current = true;
-      });
-      return;
-    }
+  const delayR = useBindRef(delay);
+  const debounceR = useBindRef(debounce);
+  const onErrorR = useBindRef(onError);
+  const ended = useRef(false);
+  const timeoutRef = useRef(0);
+  const result = useCallback((...args: Parameters<F>) => {
     try {
-      return cbR.current(depObj);
-    } catch (err) {
-      if (errorCbR.current) {
-        return errorCbR.current?.(err);
+      console.log(args);
+      if (delayR.current > 0) {
+        if (debounceR.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        const triggerCb = cbR.current;
+        timeoutRef.current = setTimeout(() => {
+          if (!ended.current) {
+            triggerCb(...args);
+          }
+        }, delayR.current);
+      } else {
+        cbR.current(...args);
       }
+    } catch (err) {
+      onErrorR.current(err);
     }
     // eslint-disable-next-line
   }, deps);
-}
-
-/**
- * useLayoutEffect using object dependencies
- *
- * can set if ignore first effect
- *
- * with error handler
- *
- * @template D
- * @param {D} depObj
- * @param {(val: D) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
- */
-export function useCustomLayoutEffect<D extends DepObj>(
-  depObj: D,
-  cb: (val: D) => ReturnType<EffectCallback>,
-  ignoreFirst: boolean = false,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-) {
-  const deps = getDepKeys(depObj);
-  const cbR = useBindRef(cb);
-  const changedR = useRef(!ignoreFirst);
-  const errorCbR = useBindRef(errorCb);
-  useLayoutEffect(() => {
-    if (!changedR.current) {
-      Promise.resolve().then(() => {
-        changedR.current = true;
-      });
-      return;
-    }
-    try {
-      return cbR.current(depObj);
-    } catch (err) {
-      if (errorCbR.current) {
-        return errorCbR.current?.(err);
-      }
-    }
-    // eslint-disable-next-line
-  }, deps);
-}
-
-/**
- * useEffect that only depends part of deps
- *
- * using object dependencies
- *
- * can set if ignore first effect
- *
- * @template D
- * @template ND
- * @param {D} depObj
- * @param {ND} relObj
- * @param {(val: D, noDepVal: ND) => ReturnType<EffectCallback>} cb
- * @param {boolean} [ignoreFirst=false]
- * @param {(err: Error) => ReturnType<EffectCallback>} [errorCb]
- */
-export function usePartialEffect<D extends DepObj, ND extends DepObj>(
-  depObj: D,
-  relObj: ND,
-  cb: (val: D, noDepVal: ND) => ReturnType<EffectCallback>,
-  ignoreFirst: boolean = false,
-  errorCb?: (err: Error) => ReturnType<EffectCallback>
-) {
-  const deps = getDepKeys(depObj);
-  const cbR = useBindRef(cb);
-  const errorCbR = useBindRef(errorCb);
-  const relayR = useBindRef(relObj);
-  const changedR = useRef(!ignoreFirst);
   useEffect(() => {
-    if (!changedR.current) {
-      Promise.resolve().then(() => {
-        changedR.current = true;
-      });
-      return;
-    }
+    return () => {
+      ended.current = true;
+    };
+  }, []);
+  return result;
+}
+
+/**
+ * partial dependencies effect with ignoreFirst and previous value compare
+ *
+ * also have error handler
+ *
+ * @template P
+ * @template any
+ */
+export function usePartialEffect<P extends readonly any[]>(
+  cb: (props: P, preProps: P | []) => ReturnType<EffectCallback>,
+  deps: DependencyList,
+  props: P,
+  ignoreFirst: boolean = false,
+  onError: (err: Error) => void = () => {}
+) {
+  const started = useRef(false);
+  const cbR = useBindRef(cb);
+  const propsR = useBindRef(props);
+  const ignoreFirstR = useBindRef(ignoreFirst);
+  const onErrorR = useBindRef(onError);
+  const preProps = useRef<P | []>([]);
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      if (!started.current) started.current = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (ignoreFirstR.current && !started.current) return;
     try {
-      return cbR.current(depObj, relayR.current);
+      const result = cbR.current(propsR.current, preProps.current);
+      preProps.current = [...propsR.current];
+      return result;
     } catch (err) {
-      if (errorCbR.current) {
-        return errorCbR.current?.(err);
-      }
+      onErrorR.current(err);
     }
     // eslint-disable-next-line
   }, deps);
@@ -241,7 +134,7 @@ export function usePartialEffect<D extends DepObj, ND extends DepObj>(
  */
 export function createService<P extends any[], R>(func: (...args: P) => R) {
   const ServiceContext = createContext<R | null>(null);
-  ServiceContext.displayName = func.name || "unkonwn_service";
+  ServiceContext.displayName = func.name || "unknown_service";
   function ServiceProvider(
     props: PropsWithChildren<P extends [] ? { params?: P } : { params: P }>
   ) {
@@ -267,27 +160,7 @@ export function createService<P extends any[], R>(func: (...args: P) => R) {
     return usedData;
   }
   return {
-    P: ServiceProvider,
-    IN: useServiceInject,
+    Provider: ServiceProvider,
+    useInject: useServiceInject,
   };
 }
-
-const fineHook = {
-  S: useState,
-  M: useCustomMemo,
-  R: useRef,
-  BR: useBindRef,
-  C: useCustomCallback,
-  E: useCustomEffect,
-  LE: useCustomLayoutEffect,
-  PE: usePartialEffect,
-  D: useDebugValue,
-  X: useReducer,
-  IM: useImperativeHandle,
-  CTX: useContext,
-  CCTX: createContext,
-  CS: createService,
-};
-export type FineHook = typeof fineHook;
-
-export default fineHook;
